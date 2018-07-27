@@ -1,17 +1,18 @@
-## 環境構築
-  ### パッケージリストの更新
-    - apt-get update
-  ### NFCカードリーダー(USB)ドライバ
-    - apt-get -y install libusb-1.0-0-dev
-  ### Python 2.7
-    - apt-get -y install python2.7
-  ### パッケージマネージャ pip のインストールまたは更新 + 必要パッケージの導入
-    - curl -kL https://bootstrap.pypa.io/get-pip.py | python
-    - pip install --upgrade pip
-    - pip install nfcpy mysql-connector-python
-## 設定
-    - config_sample.py を config.py にリネームして、自己環境のDB設定に合わせる
-    - read_uid.py の最終行でカードを接触→離脱したとき save_to_database() するようにしているが、save_to_text() にすればdb設定も不要になり、ソースフォルダに output.txt として出力される
-## 設定後
-    - `sudo python run.py` （sudoでないとデバイスへのアクセスができず失敗する）
-    - 停止は ctrl+c
+## 概要
+  - NFCカードリーダーを買ったは良いが、USBに接続した後どう使ったらよいかわからず試作
+  - dockerコンテナを起動するだけでNFC カードリーダーがスタンバイ状態になり、接触したカードの情報と取得時刻をコンテナに保存する
+  - 保存したデータはコンテナを破棄してもボリュームとして保持される（リセットするなら`docker-compose -d`）
+  - PCにNFCカードリーダーを接続してカード情報を取得することをテーマにしたサンプルアプリ(タイムカードやドアロック代わりに使えるかも)
+  - ※ docker および docker-compose の使い方は理解しているものとする
+
+## 環境構築(確認済のもの)
+  - Docker version 18.03.1-ce
+  - docker-compose version 1.6.2
+  - 仮想環境から docker を利用する場合、ホストPCのUSB機器を認識できる状況であること(lsusb コマンドで ACR-122U が確認できること)
+  - ACR-122U-A2(https://www.amazon.co.jp/gp/product/B017LPCFH2) で動作確認済だが、nfcpyライブラリが対応しているデバイスなら他のものでも良い？
+
+## 利用方法
+  - `docker-compose -d` した時点でデバイスのアクセスランプがグリーンになり、NFCカードのタッチを受け付ける（接触→離れた時点で音が鳴る）
+  - `docker exec -it nfc_db mysql -proot -ppass` でコンテナ内のDBにアクセス、`SELECT * FROM attendance.stamp;` で保存したデータを確認できる
+
+  - サンプルパスに手を加えて保存先のDBを変更する、情報をAPIに送信して別の勤怠管理アプリで利用するなど
