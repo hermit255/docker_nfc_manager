@@ -1,10 +1,23 @@
 import nfc
 import binascii
+import logging
 from datetime import datetime
 
 import db
 
 clf = nfc.ContactlessFrontend('usb')
+logging.basicConfig(level=logging.INFO)
+
+def read(tag):
+  data = get_data(tag)
+  show_info(data)
+
+  try:
+    save_to_text(data)
+    db.save_stamp(data)
+    logging.info('saving to database successful / ' + 'uid: ' + data['uid'] + ' / ' + 'stamp: ' + data['stamp'] )
+  except Exception as e:
+    logging.info('saving to database failed')
 
 def get_uid(tag):
   result = binascii.hexlify(tag.identifier).upper()
@@ -20,17 +33,8 @@ def show_info(data):
   print(data['uid'])
   print(data['stamp'] + '\n')
 
-def save_to_database(tag):
-  data = get_data(tag)
-  show_info(data)
-  db.save_stamp(data)
-  print('----------------------')
-
-def save_to_text(tag):
+def save_to_text(data):
   filename = 'output.txt'
-
-  data = get_data(tag)
-  show_info(data)
   with open(filename, mode='a') as f:
       f.write('uid: ' + data['uid'] + ' / ' + 'stamp: ' + data['stamp'] + '\n')
   print('wrote to ' + filename)
@@ -40,5 +44,4 @@ def ready():
   print('----------------------')
   print('ready to read...')
   print('----------------------')
-  clf.connect(rdwr={'on-release':save_to_database})
-  # clf.connect(rdwr={'on-release':save_to_text})
+  clf.connect(rdwr={'on-release':read})
