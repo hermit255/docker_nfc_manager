@@ -1,32 +1,16 @@
-version: '2'
+version: '3'
 services:
-  mysql:
-    build: ./mysql
-    container_name: 'nfc_db'
-    environment:
-      MYSQL_DATABASE: attendance
-      MYSQL_USER: main
-      MYSQL_PASSWORD: pass
-      MYSQL_ROOT_PASSWORD: pass
-    volumes:
-     # to preserve db data
-      - db:/var/lib/mysql
-     # to create table
-      - ./mysql/init:/docker-entrypoint-initdb.d
-    ports:
-      - 3306:3306
-  python:
-    build: ./python
-    container_name: 'nfc_apps'
+  app:
+    build: './python'
+    image: 'nfc_reader'
+    container_name: 'nfc_reader'
     environment:
       TZ: Asia/Tokyo
-    ports: 
+    ports:
       - 80:5000
     volumes:
       - ./python/apps:/apps
     # to use USB device, privileged is required
     privileged: true
-    links:
-      - mysql
 volumes:
   db:
